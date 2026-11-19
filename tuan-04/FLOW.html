@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TRADEnFUN · Flow and Layout</title>
+<style>
+  body { margin: 0; font: 15px/1.55 -apple-system, system-ui, sans-serif; color: #1a1a1a; background: #f6f6f4; }
+  main { max-width: 1040px; margin: 0 auto; padding: 40px 24px 80px; }
+  h1 { margin: 0 0 4px; font-size: 28px; }
+  p.sub { margin: 0 0 32px; color: #666; }
+  h2 { margin: 40px 0 12px; font-size: 19px; }
+  p.note { margin: -4px 0 12px; color: #666; font-size: 14px; }
+  .card { background: #fff; border: 1px solid #e3e3e0; border-radius: 10px; padding: 20px; overflow-x: auto; }
+  .wire { display: grid; grid-template-columns: 220px 1fr; min-height: 420px; border: 1px solid #ddd; border-radius: 10px; overflow: hidden; background: #fff; }
+  .side { background: #efefec; padding: 16px; font-size: 13px; display: flex; flex-direction: column; gap: 4px; }
+  .side .proj { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 8px 10px; margin-bottom: 12px; }
+  .side .grp { margin-top: 10px; color: #888; font-size: 11px; letter-spacing: .08em; }
+  .side .active { background: #e1e1dd; border-radius: 6px; padding: 2px 6px; }
+  .side .bal { margin-top: auto; font-weight: 600; }
+  .content { padding: 24px; display: flex; justify-content: center; align-items: flex-start; }
+  .col { width: 100%; max-width: 640px; border: 2px dashed #b9c3e6; border-radius: 8px; padding: 16px; color: #555; }
+  .col h3 { margin: 0; color: #1a1a1a; }
+  .lanes { display: grid; grid-template-columns: 118px repeat(9, minmax(0, 1fr)); font-size: 12px; line-height: 1.35; }
+  .lane-h { text-align: center; color: #888; padding: 4px 0 8px; font-variant-numeric: tabular-nums; }
+  .lane-n { border-top: 1px solid #e3e3e0; padding: 12px 8px 12px 0; display: flex; flex-direction: column; justify-content: center; }
+  .lane-n span { color: #888; font-size: 11px; }
+  .lane-c { border-top: 1px solid #e3e3e0; border-left: 1px solid #f0f0ee; padding: 8px 4px; display: flex; align-items: center; min-height: 84px; }
+  .box { width: 100%; border: 1.5px solid #c9c9c5; background: #f3f3f1; border-radius: 6px; padding: 6px 5px; text-align: center; }
+  .box.u { border-color: #4f6bd8; background: #fff; }
+  .box.x { border-style: dashed; background: #fff; }
+  .box.a { border-color: #c2571a; background: #fff; width: auto; max-width: 260px; }
+  .adm { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; padding-left: 4px; }
+  .adm span { color: #888; font-size: 11px; }
+  @media (max-width: 640px) { .wire { grid-template-columns: 1fr; } .side { flex-direction: row; flex-wrap: wrap; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>TRADEnFUN · Flow and Layout</h1>
+  <p class="sub">Companion to docs/SPEC.md v1.3 · 2026-11-18 · Phase 1A, chỉ nhóm trader</p>
+
+  <h2>1. Core flow</h2>
+  <p class="note">Lần đầu: trader đi từ đăng nhập tới bảng điều khiển và mục Thói quen. Đọc từ trên xuống; chỉ có một đường quay lại, khi key bị từ chối.</p>
+  <div class="card"><pre class="mermaid">
+flowchart TD
+  A["Đăng nhập<br/>Google hoặc email kèm mã một lần"] -->|lần đầu đăng nhập| B{"Nối sàn?"}
+  B -->|chọn một sàn| C["Nối sàn, bước 2<br/>dán API key chỉ đọc"]
+  B -->|bấm Bỏ qua, xem bản demo| D["Tài khoản demo<br/>khoảng 300 lệnh mẫu<br/>băng Đây là dữ liệu mẫu"]
+  C -->|bấm Kiểm key và nối| E{"Key hợp lệ và<br/>chỉ có quyền đọc?"}
+  E -->|có| G["Đồng bộ lần đầu<br/>hiện tiến độ, số liệu về dần"]
+  E -->|không| F["Từ chối, không lưu gì<br/>nêu lý do và cách tạo lại key"]
+  F -->|dán key mới| C
+  G -->|chuẩn hoá thành lệnh, tính chỉ số| H["Bảng điều khiển<br/>1. Tổng quan · 2. Chi tiết · 3. Lịch<br/>4. Lệnh · 5. Vị thế mở"]
+  D -->|mọi màn chạy như thật| H
+  H -->|mở mục Thói quen| I["6. Thói quen<br/>Điểm mạnh · Rủi ro · Cần cải thiện"]
+  I -->|bấm Xem các lệnh này| J["4. Lệnh<br/>đã lọc đúng các lệnh làm căn cứ"]
+  </pre></div>
+
+  <h2>2. Những lần sau</h2>
+  <p class="note">Sau lần đầu, trader quay lại thì thấy gì, và hệ thống tự làm gì ở phía sau.</p>
+  <div class="card"><pre class="mermaid">
+flowchart TD
+  A["Đăng nhập lại"] -->|đã có tài khoản sàn| B["Bảng điều khiển<br/>số liệu của lần đồng bộ gần nhất"]
+  B -->|10 phút một lần, hoặc bấm Đồng bộ ngay| C{"Sàn trả<br/>dữ liệu?"}
+  C -->|có| D["Thêm lệnh mới vào kho lịch sử<br/>cập nhật số liệu và Thói quen"]
+  C -->|không: key bị xoá hoặc hết hạn| E["Băng Mất kết nối<br/>toàn bộ lịch sử cũ vẫn xem được"]
+  E -->|bấm nối lại, dán key mới| F["Nối sàn, bước 2<br/>lịch sử cũ được nối tiếp"]
+  </pre></div>
+  <p class="note" style="margin-top:12px">Hai lối khác cũng dẫn tới Nối sàn, bước 2: mở 7. Tài khoản sàn rồi bấm Thêm; hoặc đang xem tài khoản demo thì bấm Nối sàn trên băng dữ liệu mẫu.</p>
+
+  <h2>3. Nối sàn và giữ API key</h2>
+  <p class="note">Trao đổi quan trọng nhất: secret của trader đi qua những đâu, ai được giải mã, và khi nào bị từ chối (SPEC mục 4.8).</p>
+  <div class="card"><pre class="mermaid">
+sequenceDiagram
+  participant U as Trader
+  participant W as Web app
+  participant S as Tiến trình đồng bộ
+  participant K as Dịch vụ quản lý khoá
+  participant D as Cơ sở dữ liệu
+  participant X as Sàn
+  participant M as Email
+  U->>X: tạo API key chỉ đọc, giới hạn theo IP của TRADEnFUN
+  U->>W: dán tên tài khoản, API key, secret
+  W->>S: chuyển secret qua kênh nội bộ, không ghi log
+  S->>X: đọc danh sách quyền của key
+  X-->>S: trả danh sách quyền
+  alt key sai, hoặc có quyền giao dịch, rút tiền, chuyển ví
+    S-->>W: từ chối, kèm lý do
+    W-->>U: báo lý do và cách tạo lại key, không lưu gì
+  else chỉ có quyền đọc
+    S->>K: xin khoá để mã hoá
+    K-->>S: trả khoá dữ liệu đã bọc bằng khoá chủ
+    S->>D: lưu bản mã vào connection_secrets
+    S->>D: ghi một dòng secret_access_log
+    W-->>U: chỉ hiện 4 ký tự cuối của API key
+    W->>M: gửi email báo có kết nối mới
+    M-->>U: email Bạn vừa thêm một tài khoản sàn
+    loop mỗi 10 phút, mỗi kết nối
+      S->>K: giải mã secret, chỉ giữ trong bộ nhớ
+      S->>X: gọi các lời gọi đọc trong danh sách cho phép
+      X-->>S: lần khớp, phí, funding, vị thế, số dư, nạp rút
+      S->>D: lưu lớp thô, rồi chuẩn hoá thành lệnh
+    end
+    U->>W: mở bảng điều khiển
+    W->>D: đọc lớp chuẩn của đúng người đó
+    W-->>U: hiện số liệu và thói quen
+  end
+  </pre></div>
+
+  <h2>4. Roles</h2>
+  <p class="note">Mỗi vai trò một hàng, mỗi bước một cột, đọc từ trái sang phải theo số 1 tới 9. Hai ô cùng cột là hai bên trao đổi với nhau trong cùng một bước.</p>
+  <div class="card"><div class="lanes"><div class="lane-h"></div><div class="lane-h">1</div><div class="lane-h">2</div><div class="lane-h">3</div><div class="lane-h">4</div><div class="lane-h">5</div><div class="lane-h">6</div><div class="lane-h">7</div><div class="lane-h">8</div><div class="lane-h">9</div><div class="lane-n"><strong>Trader</strong><span>người dùng</span></div><div class="lane-c"><div class="box u">Tạo key chỉ đọc trên sàn</div></div><div class="lane-c"><div class="box u">Dán key vào Nối sàn</div></div><div class="lane-c"></div><div class="lane-c"></div><div class="lane-c"></div><div class="lane-c"></div><div class="lane-c"></div><div class="lane-c"></div><div class="lane-c"><div class="box u">Xem bảng điều khiển và Thói quen</div></div><div class="lane-n"><strong>Web app</strong><span>trang web</span></div><div class="lane-c"></div><div class="lane-c"></div><div class="lane-c"><div class="box s">Nhận key, chuyển đi, không giải mã được</div></div><div class="lane-c"></div><div class="lane-c"></div><div class="lane-c"></div><div class="lane-c"></div><div class="lane-c"><div class="box s">Hiện số liệu từ lớp chuẩn</div></div><div class="lane-c"></div><div class="lane-n"><strong>Tiến trình đồng bộ</strong><span>tự chạy</span></div><div class="lane-c"></div><div class="lane-c"></div><div class="lane-c"></div><div class="lane-c"><div class="box s">Kiểm quyền của key</div></div><div class="lane-c"><div class="box s">Mã hoá, lưu secret</div></div><div class="lane-c"><div class="box s">Kéo dữ liệu 10 phút một lần</div></div><div class="lane-c"><div class="box s">Chuẩn hoá thành lệnh, lưu kho lịch sử, tính thói quen</div></div><div class="lane-c"></div><div class="lane-c"></div><div class="lane-n"><strong>Sàn</strong><span>bên thứ ba</span></div><div class="lane-c"></div><div class="lane-c"></div><div class="lane-c"></div><div class="lane-c"><div class="box x">Trả danh sách quyền</div></div><div class="lane-c"></div><div class="lane-c"><div class="box x">Trả lịch sử, phí, funding, số dư</div></div><div class="lane-c"></div><div class="lane-c"></div><div class="lane-c"></div><div class="lane-n"><strong>Người vận hành</strong><span>Master Admin</span></div><div class="lane-c" style="grid-column: span 9"><div class="adm"><div class="box a">Xử lý tay yêu cầu xoá dữ liệu trader gửi qua email</div><div class="box a">Bật công tắc khẩn khi nghi lộ key: dừng bước 6, xoá mọi secret</div><span>Ngoài luồng chính, chỉ làm khi có việc</span></div></div></div></div>
+
+  <h2>5. Ngắt kết nối</h2>
+  <p class="note">Ba đường dẫn tới việc một kết nối bị ngắt. Cả ba chỉ xoá secret; lịch sử lệnh của trader luôn được giữ nguyên.</p>
+  <div class="card"><pre class="mermaid">
+flowchart TD
+  A["Hệ thống kiểm quyền mỗi ngày"] -->|key bị bật quyền giao dịch| A2["Dừng đồng bộ,<br/>xoá secret ngay"]
+  A2 -->|đổi trạng thái, gửi email cho trader| A3["Đã ngắt vì key<br/>có quyền giao dịch<br/>lịch sử lệnh giữ nguyên"]
+
+  B["Trader bấm Ngắt kết nối<br/>ở 7. Tài khoản sàn"] -->|hiện hộp xác nhận| B2{"Trader<br/>xác nhận?"}
+  B2 -->|có, và nhập mã email nếu phiên quá 24 giờ| B3["Xoá secret ngay,<br/>ngừng đồng bộ"]
+  B2 -->|không| B5["Không đổi gì"]
+  B3 -->|lịch sử lệnh giữ nguyên| B4["Kết nối ở trạng thái Đã ngắt"]
+
+  D["Người vận hành<br/>bật công tắc khẩn"] -->|khi nghi lộ key| D2["Dừng mọi đồng bộ,<br/>xoá toàn bộ secret trong 5 phút"]
+  D2 -->|email mọi trader: xoá key trên sàn| D3["Lịch sử lệnh giữ nguyên<br/>trader nối lại sau"]
+  </pre></div>
+  <p class="note" style="margin-top:12px">Xoá dữ liệu lịch sử: không build sẵn. Trader nào muốn xoá thì tự gửi email tới địa chỉ hỗ trợ, Người vận hành xử lý tay.</p>
+
+  <h2>6. Layout</h2>
+  <p class="note">Khung giao diện chung theo SPEC mục 4.4: menu bên trái, nội dung ở trên giữa.</p>
+  <div class="wire">
+    <div class="side">
+      <strong>TRADEnFUN</strong>
+      <div class="proj">Tất cả tài khoản ▾</div>
+      <div class="grp">TỔNG QUAN</div><div class="active">Tổng quan</div><div>Chi tiết</div><div>Lịch</div>
+      <div class="grp">GIAO DỊCH</div><div>Lệnh</div><div>Vị thế mở</div>
+      <div class="grp">PHÂN TÍCH</div><div>Thói quen</div>
+      <div class="grp">TÀI KHOẢN</div><div>Tài khoản sàn</div><div>Cài đặt</div>
+      <div class="bal">● Đồng bộ 2 phút trước<br>[Đồng bộ ngay]</div>
+    </div>
+    <div class="content">
+      <div class="col">
+        <h3>Tổng quan</h3>
+        <div>Tất cả tài khoản · 30 ngày gần nhất · Net &nbsp; [30 ngày ▾] [Gross | Net]</div>
+        <p>Băng thông báo nếu có: dữ liệu mẫu, mất kết nối, đang đồng bộ lần đầu.</p>
+        <p>Cột nội dung: rộng tối đa khoảng 1200 px, căn giữa theo chiều ngang, bắt đầu từ trên cùng. Thẻ chỉ số, rồi biểu đồ, rồi 3 thói quen nổi bật.</p>
+        <p>Chân trang: dòng miễn trừ, thống kê từ dữ liệu quá khứ, không phải lời khuyên đầu tư.</p>
+      </div>
+    </div>
+  </div>
+</main>
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+  mermaid.initialize({ startOnLoad: false, theme: "neutral", flowchart: { curve: "stepAfter", nodeSpacing: 50, rankSpacing: 60 } });
+  // Mỗi sơ đồ một id riêng và vẽ lần lượt, để không sơ đồ nào vẽ nhầm vào khung của sơ đồ khác.
+  let n = 0;
+  for (const el of document.querySelectorAll("pre.mermaid")) {
+    const src = el.innerHTML.replace(/<br\s*\/?>/gi, "<br/>").replace(/&gt;/g, ">").replace(/&amp;/g, "&");
+    const { svg } = await mermaid.render("flow-" + (++n), src);
+    el.innerHTML = svg;
+  }
+</script>
+</body>
+</html>
